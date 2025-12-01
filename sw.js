@@ -1,25 +1,24 @@
-const CACHE_NAME = 'sigaji-app-v1';
+const CACHE_NAME = 'sigaji-app-v2';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  'https://cdn.tailwindcss.com',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
-  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js'
+  './512.png' 
+  // Saya hapus CDN dari daftar wajib install agar SW tidak error jika internet lambat.
+  // Aplikasi tetap akan meload CDN saat online.
 ];
 
-// Install Service Worker & Cache Assets
+// Install Service Worker
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('Caching assets');
       return cache.addAll(ASSETS);
     })
   );
+  self.skipWaiting(); // Paksa SW baru segera aktif
 });
 
-// Activate & Cleanup Old Caches
+// Activate & Hapus Cache Lama
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
@@ -28,9 +27,10 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
+  self.clients.claim();
 });
 
-// Fetch Strategy: Cache First, falling back to Network
+// Fetch Strategy
 self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
